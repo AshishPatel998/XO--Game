@@ -39,22 +39,14 @@ function onCellClick(e) {
     return;
   }
 
-  currentPlayer = currentPlayer === "X" ? "O" : "X";
-
-  if (currentPlayer === "O") {
-    info.textContent = "Computer's turn (O)";
-    setTimeout(computerMove, 500);
-  } else {
-    info.textContent = "Your turn (X)";
-  }
+  currentPlayer = "O";
+  info.textContent = "Computer's turn (O)";
+  setTimeout(computerMove, 500);
 }
 
 function computerMove() {
-  const emptyCells = cells.filter(c => c.textContent === "");
-  if (emptyCells.length === 0) return;
-
-  const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-  randomCell.textContent = "O";
+  const bestMove = getBestMove();
+  cells[bestMove].textContent = "O";
 
   if (checkWinner("O")) {
     info.textContent = "Computer wins! 😢";
@@ -70,6 +62,43 @@ function computerMove() {
 
   currentPlayer = "X";
   info.textContent = "Your turn (X)";
+}
+
+function getBestMove() {
+  const emptyIndices = cells
+    .map((cell, index) => (cell.textContent === "" ? index : null))
+    .filter(index => index !== null);
+
+  // Check if AI can win in next move
+  for (let index of emptyIndices) {
+    cells[index].textContent = "O";
+    if (checkWinner("O")) {
+      cells[index].textContent = "";
+      return index;
+    }
+    cells[index].textContent = "";
+  }
+
+  // Block if player can win in next move
+  for (let index of emptyIndices) {
+    cells[index].textContent = "X";
+    if (checkWinner("X")) {
+      cells[index].textContent = "";
+      return index;
+    }
+    cells[index].textContent = "";
+  }
+
+  // Take center if available
+  if (emptyIndices.includes(4)) return 4;
+
+  // Take corners
+  const corners = [0, 2, 6, 8];
+  const availableCorners = corners.filter(i => emptyIndices.includes(i));
+  if (availableCorners.length > 0) return availableCorners[0];
+
+  // Take any empty
+  return emptyIndices[0];
 }
 
 function checkWinner(player) {
@@ -94,3 +123,4 @@ function resetGame() {
 }
 
 createBoard();
+  
